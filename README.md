@@ -56,5 +56,3 @@ Click on the **Settings Gear** icon in the chat header, securely select your pre
 - `/src/utils/pdfGenerator.js`: The declarative compiler building vector PDFs.
 - `/src/utils/fileParser.js`: Worker abstraction for cleanly unpacking documents natively.
 
----
-*Built via advanced agentic coding for modern software scoping.*
