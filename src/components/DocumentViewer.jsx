@@ -118,17 +118,38 @@ export default function DocumentViewer({ document }) {
           {document.requirements && document.requirements.length > 0 ? (
           <ul className="req-list fade-in-up" style={{ animationDelay: '0.2s' }}>
             {document.requirements.map((req, index) => {
-              const isNFR = req.match(/\[?NFR\]?/i) || req.toLowerCase().includes('non-functional');
-              const isFR = req.match(/\[?FR\]?/i) || req.toLowerCase().includes('functional') || !isNFR;
+              let reqType = 'F';
+              let displayReq = req;
               
-              let highlightClass = isNFR ? 'req-nfr' : 'req-fr';
-              let displayReq = req.replace(/\[?(NFR|FR)\]?:?\s*/i, '');
+              const match = req.match(/^\[?([FURPS+])\]?:?/i);
+              if (match && match[1]) {
+                reqType = match[1].toUpperCase();
+                displayReq = req.replace(/^\[?([FURPS+])\]?:?\s*/i, '');
+              } else {
+                if (req.toLowerCase().includes('usability')) reqType = 'U';
+                else if (req.toLowerCase().includes('reliability')) reqType = 'R';
+                else if (req.toLowerCase().includes('performance')) reqType = 'P';
+                else if (req.toLowerCase().includes('security')) reqType = 'S';
+                else if (req.toLowerCase().includes('constraint') || req.toLowerCase().includes('compliance')) reqType = '+';
+              }
+              
+              let highlightClass = 'req-f';
+              let typeLabel = 'Functional';
+              
+              switch(reqType) {
+                case 'U': highlightClass = 'req-u'; typeLabel = 'Usability'; break;
+                case 'R': highlightClass = 'req-r'; typeLabel = 'Reliability'; break;
+                case 'P': highlightClass = 'req-p'; typeLabel = 'Performance'; break;
+                case 'S': highlightClass = 'req-s'; typeLabel = 'Security'; break;
+                case '+': highlightClass = 'req-plus'; typeLabel = 'Additional'; break;
+                case 'F': default: highlightClass = 'req-f'; typeLabel = 'Functional'; break;
+              }
               
               return (
                 <li key={index} className={highlightClass}>
                   <Target size={14} className="req-icon" />
                   <span className="req-text-content">
-                    <strong>{isNFR ? 'NFR' : 'FR'}:</strong> {displayReq}
+                    <strong>{typeLabel}:</strong> {displayReq}
                   </span>
                 </li>
               );
