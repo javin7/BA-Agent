@@ -4,8 +4,6 @@ The **BA Agent** is a sleek, AI-powered digital assistant built to help software
 
 By simply chatting with the agent in plain English, it dynamically synthesizes your thoughts into a formal, structured **Business Requirements Document (BRD)** and a list of **Use Cases**—complete with intelligent clarifying questions to ensure your project scope is watertight.
 
-![BA Agent Interface placeholder](https://via.placeholder.com/800x400?text=BA+Agent+Interface)
-
 ## Features ✨
 
 *   **Conversational Interface**: Chat naturally with an AI expert.
