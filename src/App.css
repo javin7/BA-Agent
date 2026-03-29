@@ -1,0 +1,10 @@
+/* Layout overrides for App */
+.left-pane {
+  flex: 1;
+  max-width: 450px;
+  min-width: 350px;
+}
+
+.right-pane {
+  flex: 2;
+}
