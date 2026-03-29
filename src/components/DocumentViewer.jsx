@@ -59,16 +59,27 @@ export default function DocumentViewer({ document }) {
             <Target size={18} />
             <h3>Business Requirements</h3>
           </div>
-          {document.requirements.length === 0 ? (
-            <div className="empty-state">No requirements identified yet. Chat with the agent to start building.</div>
-          ) : (
-            <ul className="req-list">
-              {document.requirements.map((req, i) => (
-                <li key={i} className="animate-fade-in" style={{ animationDelay: `${i * 0.05}s` }}>
-                  {req}
+          {document.requirements && document.requirements.length > 0 ? (
+          <ul className="req-list fade-in-up" style={{ animationDelay: '0.2s' }}>
+            {document.requirements.map((req, index) => {
+              const isNFR = req.match(/\[?NFR\]?/i) || req.toLowerCase().includes('non-functional');
+              const isFR = req.match(/\[?FR\]?/i) || req.toLowerCase().includes('functional') || !isNFR;
+              
+              let highlightClass = isNFR ? 'req-nfr' : 'req-fr';
+              let displayReq = req.replace(/\[?(NFR|FR)\]?:?\s*/i, '');
+              
+              return (
+                <li key={index} className={highlightClass}>
+                  <Target size={14} className="req-icon" />
+                  <span className="req-text-content">
+                    <strong>{isNFR ? 'NFR' : 'FR'}:</strong> {displayReq}
+                  </span>
                 </li>
-              ))}
-            </ul>
+              );
+            })}
+          </ul>
+        ) : (
+            <div className="empty-state">No requirements identified yet. Chat with the agent to start building.</div>
           )}
         </div>
 

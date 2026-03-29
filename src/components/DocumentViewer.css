@@ -64,25 +64,25 @@
 .req-list li {
   background: rgba(255, 255, 255, 0.02);
   border: 1px solid var(--border-color);
-  padding: 1rem 1.25rem;
+  padding: 0.6rem 0.85rem;
   border-radius: 4px;
-  font-size: 0.95rem;
-  line-height: 1.5;
+  font-size: 0.85rem;
+  line-height: 1.4;
   color: var(--text-main);
-  transition: all 0.2s ease;
-  position: relative;
-  overflow: hidden;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.req-list li::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 3px;
-  background: var(--accent-color);
-  opacity: 0.7;
+.req-fr {
+  border-left: 3px solid #22c55e !important;
+  background: rgba(34, 197, 94, 0.05) !important;
+}
+
+.req-nfr {
+  border-left: 3px solid #f97316 !important;
+  background: rgba(249, 115, 22, 0.05) !important;
 }
 
 .req-list li:hover {
@@ -99,8 +99,10 @@
 .use-case-card {
   background: rgba(255, 255, 255, 0.02);
   border: 1px solid var(--border-color);
-  padding: 1.25rem;
+  padding: 0.85rem 1rem;
   border-radius: 4px;
+  font-size: 0.85rem;
+  line-height: 1.4;
   transition: all 0.2s ease;
 }
 
