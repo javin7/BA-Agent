@@ -45,6 +45,7 @@ export default function SettingsModal({ isOpen, onClose }) {
               <option value="openai">OpenAI (ChatGPT)</option>
               <option value="anthropic">Anthropic (Claude)</option>
               <option value="github">GitHub Copilot Models</option>
+              <option value="openrouter">OpenRouter</option>
             </select>
           </div>
           <div className="form-group">

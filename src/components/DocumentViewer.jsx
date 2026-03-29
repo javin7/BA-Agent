@@ -18,7 +18,7 @@ export default function DocumentViewer({ document }) {
   };
 
   return (
-    <div className="glass-panel right-pane fade-in-up" style={{ animationDelay: '0.1s' }}>
+    <div className="glass-panel document-pane fade-in-up" style={{ animationDelay: '0.1s' }}>
       <div className="header" style={{ justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
           <FileText size={22} color="var(--accent-color)" />

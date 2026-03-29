@@ -23,7 +23,7 @@ export default function ChatInterface({ messages, onSendMessage, isTyping, onOpe
   };
 
   return (
-    <div className="glass-panel left-pane fade-in-up">
+    <div className="glass-panel chat-pane fade-in-up">
       <div className="header" style={{ justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
           <Bot size={22} color="var(--accent-color)" />

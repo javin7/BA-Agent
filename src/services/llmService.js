@@ -86,13 +86,17 @@ export async function generateDocumentUpdate(messages, currentDocument) {
     const data = await response.json();
     jsonString = data.candidates[0].content.parts[0].text;
 
-  } else if (provider === 'openai' || provider === 'github') {
-    // OpenAI and GitHub Models (Azure) use the same OpenAI chat-completions schema
+  } else if (provider === 'openai' || provider === 'github' || provider === 'openrouter') {
+    // OpenAI, GitHub Models, and OpenRouter use the same chat-completions schema
     const endpoint = provider === 'openai' 
       ? 'https://api.openai.com/v1/chat/completions'
-      : 'https://models.inference.ai.azure.com/chat/completions';
+      : provider === 'github'
+        ? 'https://models.inference.ai.azure.com/chat/completions'
+        : 'https://openrouter.ai/api/v1/chat/completions';
     
-    const model = provider === 'openai' ? 'gpt-4o-mini' : 'gpt-4o';
+    let model = 'gpt-4o-mini';
+    if (provider === 'github') model = 'gpt-4o';
+    if (provider === 'openrouter') model = 'google/gemini-2.5-flash';
 
     const payload = {
       model: model,
@@ -105,12 +109,19 @@ export async function generateDocumentUpdate(messages, currentDocument) {
       temperature: 0.2
     };
 
+    const fetchHeaders = {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${apiKey}`
+    };
+
+    if (provider === 'openrouter') {
+      fetchHeaders["HTTP-Referer"] = "http://localhost:5173";
+      fetchHeaders["X-Title"] = "BA Agent";
+    }
+
     const response = await fetch(endpoint, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${apiKey}`
-      },
+      headers: fetchHeaders,
       body: JSON.stringify(payload)
     });
 

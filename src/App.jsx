@@ -12,14 +12,14 @@ function App() {
 
   return (
     <div className="app-container">
+      <DocumentViewer 
+        document={document} 
+      />
       <ChatInterface 
         messages={messages} 
         onSendMessage={sendMessage} 
         isTyping={isTyping} 
         onOpenSettings={() => setIsSettingsOpen(true)}
-      />
-      <DocumentViewer 
-        document={document} 
       />
       <SettingsModal 
         isOpen={isSettingsOpen} 
