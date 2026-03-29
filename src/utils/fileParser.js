@@ -7,8 +7,9 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
 
 export async function parseFileText(file) {
   const extension = file.name.split('.').pop().toLowerCase();
+  const textExtensions = ['txt', 'md', 'markdown', 'csv', 'json', 'xml', 'html'];
   
-  if (extension === 'txt') {
+  if (textExtensions.includes(extension)) {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = (e) => resolve(e.target.result);
@@ -58,5 +59,5 @@ export async function parseFileText(file) {
     });
   }
 
-  throw new Error(`Unsupported file type: .${extension}. Please upload .txt, .pdf, or .docx`);
+  throw new Error(`Unsupported file type: .${extension}. Supported: .pdf, .docx, .txt, .md, .csv, .json, .xml, .html`);
 }

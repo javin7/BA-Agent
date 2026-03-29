@@ -89,7 +89,7 @@ export default function ChatInterface({ messages, onSendMessage, isTyping, onOpe
               type="button" 
               className="attach-btn" 
               onClick={() => fileInputRef.current?.click()}
-              title="Attach Document (.txt, .pdf, .docx)"
+              title="Attach Document (.pdf, .docx, .txt, .csv, .md, .json, .xml)"
             >
               <Paperclip size={18} />
             </button>
@@ -97,7 +97,7 @@ export default function ChatInterface({ messages, onSendMessage, isTyping, onOpe
               type="file"
               ref={fileInputRef}
               style={{ display: 'none' }}
-              accept=".txt,.pdf,.docx"
+              accept=".txt,.pdf,.docx,.md,.markdown,.csv,.json,.xml,.html"
               onChange={(e) => {
                 const file = e.target.files[0];
                 if (file) setAttachedFile(file);
