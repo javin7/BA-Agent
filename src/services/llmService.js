@@ -1,11 +1,8 @@
 /**
- * Service to communicate with OpenRouter API
+ * Service to communicate with multiple LLM APIs based on user settings
  */
 
-export async function generateDocumentUpdate(messages, currentDocument) {
-  const apiKey = "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";
-
-  const systemInstruction = `You are an expert digital Business Analyst helping a user define a software project.
+const SYSTEM_INSTRUCTION = `You are an expert digital Business Analyst helping a user define a software project.
 You will be provided with the current document state and the conversation history.
 Your job is to analyze the user's latest input, respond conversationally, and update the formal document state.
 
@@ -25,48 +22,140 @@ Rules:
 - If detailScore is >= 90, set clarifyingQuestions to [].
 - Append to the existing requirements/use cases rather than replacing them, unless the user explicitly wants to pivot.`;
 
-  // Format the conversation history for OpenRouter
-  // Role mapping: 'agent' -> 'assistant', 'user' -> 'user'
+const JSON_SCHEMA = {
+  type: "object",
+  properties: {
+    replyContent: { type: "string" },
+    projectTitle: { type: "string" },
+    requirements: { type: "array", items: { type: "string" } },
+    useCases: { type: "array", items: { type: "string" } },
+    clarifyingQuestions: { type: "array", items: { type: "string" } },
+    detailScore: { type: "integer" }
+  },
+  required: ["replyContent", "projectTitle", "requirements", "useCases", "clarifyingQuestions", "detailScore"]
+};
+
+export async function generateDocumentUpdate(messages, currentDocument) {
+  const provider = localStorage.getItem('ba_agent_provider') || 'google';
+  const apiKey = localStorage.getItem(`ba_agent_key_${provider}`);
+
+  if (!apiKey) {
+    throw new Error(`Missing API Key for ${provider}. Please configure it in Settings.`);
+  }
+
+  // Common formatted messages for OpenAI-like endpoints
   const formattedMessages = messages.map(msg => ({
     role: msg.role === 'agent' ? 'assistant' : 'user',
     content: msg.content
   }));
 
-  // Append a final user message giving the current state to force the context
-  formattedMessages.push({
+  const contextMessage = {
     role: 'user',
     content: `Here is the current document state:\n${JSON.stringify(currentDocument, null, 2)}\n\nPlease provide the updated JSON response.`
-  });
-
-  const requestBody = {
-    model: "google/gemini-2.5-flash", // Fast, json-friendly, smart model available on OpenRouter
-    messages: [
-      { role: "system", content: systemInstruction },
-      ...formattedMessages
-    ],
-    response_format: { type: "json_object" },
-    temperature: 0.2
   };
 
-  const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      "Authorization": `Bearer ${apiKey}`,
-      "HTTP-Referer": "http://localhost:5173",
-      "X-Title": "BA Agent",
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify(requestBody)
-  });
+  let jsonString = '';
 
-  if (!response.ok) {
-    throw new Error(`OpenRouter API Error: ${response.status} ${response.statusText}`);
+  if (provider === 'google') {
+    // Google Gemini API directly
+    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+    
+    // Gemini has a specific content format
+    const geminiContents = [...formattedMessages, contextMessage].map(m => ({
+      role: m.role === 'assistant' ? 'model' : 'user',
+      parts: [{ text: m.content }]
+    }));
+
+    const payload = {
+      systemInstruction: { parts: [{ text: SYSTEM_INSTRUCTION }] },
+      contents: geminiContents,
+      generationConfig: {
+        temperature: 0.2,
+        responseMimeType: "application/json",
+        responseSchema: JSON_SCHEMA
+      }
+    };
+
+    const response = await fetch(endpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+
+    if (!response.ok) throw new Error(`Google Gemini Error: ${response.statusText}`);
+    const data = await response.json();
+    jsonString = data.candidates[0].content.parts[0].text;
+
+  } else if (provider === 'openai' || provider === 'github') {
+    // OpenAI and GitHub Models (Azure) use the same OpenAI chat-completions schema
+    const endpoint = provider === 'openai' 
+      ? 'https://api.openai.com/v1/chat/completions'
+      : 'https://models.inference.ai.azure.com/chat/completions';
+    
+    const model = provider === 'openai' ? 'gpt-4o-mini' : 'gpt-4o';
+
+    const payload = {
+      model: model,
+      messages: [
+        { role: 'system', content: SYSTEM_INSTRUCTION },
+        ...formattedMessages,
+        contextMessage
+      ],
+      response_format: { type: "json_object" },
+      temperature: 0.2
+    };
+
+    const response = await fetch(endpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${apiKey}`
+      },
+      body: JSON.stringify(payload)
+    });
+
+    if (!response.ok) throw new Error(`${provider} API Error: ${response.statusText}`);
+    const data = await response.json();
+    jsonString = data.choices[0].message.content;
+
+  } else if (provider === 'anthropic') {
+    // Anthropic API
+    const endpoint = 'https://api.anthropic.com/v1/messages';
+    
+    // Convert history
+    const anthropicMessages = [...formattedMessages, contextMessage];
+    
+    // Anthropic schema enforcement isn't baked into fetch natively via response_format 
+    // without using tool use, but appending a strict prompt usually works for Claude 3.
+    const payload = {
+      model: "claude-3-haiku-20240307",
+      system: SYSTEM_INSTRUCTION + "\n\nReturn EXACTLY and ONLY valid JSON.",
+      messages: anthropicMessages,
+      max_tokens: 1500,
+      temperature: 0.2
+    };
+
+    const response = await fetch(endpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": apiKey,
+        "anthropic-version": "2023-06-01",
+        "anthropic-dangerously-allow-browser": "true"
+      },
+      body: JSON.stringify(payload)
+    });
+
+    if (!response.ok) {
+      const respData = await response.json().catch(() => ({}));
+      throw new Error(`Anthropic Error: ${respData.error?.message || response.statusText}`);
+    }
+    const data = await response.json();
+    jsonString = data.content[0].text;
   }
 
-  const data = await response.json();
-  let jsonString = data.choices[0].message.content.trim();
-
-  // Strip potential markdown code block wrappers if the model ignores the instruction
+  // Cleanup potential markdown fences
+  jsonString = jsonString.trim();
   if (jsonString.startsWith('```json')) {
     jsonString = jsonString.replace(/^```json\n/, '').replace(/\n```$/, '');
   } else if (jsonString.startsWith('```')) {

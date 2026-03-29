@@ -1,8 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
-import { Send, Bot, User, Loader2 } from 'lucide-react';
+import { Send, Bot, User, Loader2, Settings } from 'lucide-react';
 import './ChatInterface.css'; // We'll create a basic css for chat
 
-export default function ChatInterface({ messages, onSendMessage, isTyping }) {
+export default function ChatInterface({ messages, onSendMessage, isTyping, onOpenSettings }) {
   const [input, setInput] = useState('');
   const messagesEndRef = useRef(null);
 
@@ -24,9 +24,14 @@ export default function ChatInterface({ messages, onSendMessage, isTyping }) {
 
   return (
     <div className="glass-panel left-pane fade-in-up">
-      <div className="header">
-        <Bot size={22} color="var(--accent-color)" />
-        <h2>BA Agent</h2>
+      <div className="header" style={{ justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <Bot size={22} color="var(--accent-color)" />
+          <h2>BA Agent</h2>
+        </div>
+        <button onClick={onOpenSettings} className="icon-btn" title="API Settings">
+          <Settings size={18} />
+        </button>
       </div>
       
       <div className="chat-messages">
