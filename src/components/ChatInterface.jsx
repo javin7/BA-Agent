@@ -1,10 +1,12 @@
 import { useState, useRef, useEffect } from 'react';
-import { Send, Bot, User, Loader2, Settings } from 'lucide-react';
-import './ChatInterface.css'; // We'll create a basic css for chat
+import { Send, Bot, User, Loader2, Settings, Paperclip, X } from 'lucide-react';
+import './ChatInterface.css';
 
 export default function ChatInterface({ messages, onSendMessage, isTyping, onOpenSettings }) {
   const [input, setInput] = useState('');
+  const [attachedFile, setAttachedFile] = useState(null);
   const messagesEndRef = useRef(null);
+  const fileInputRef = useRef(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -16,9 +18,10 @@ export default function ChatInterface({ messages, onSendMessage, isTyping, onOpe
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (input.trim()) {
-      onSendMessage(input.trim());
+    if (input.trim() || attachedFile) {
+      onSendMessage(input.trim(), attachedFile);
       setInput('');
+      setAttachedFile(null);
     }
   };
 
@@ -43,7 +46,7 @@ export default function ChatInterface({ messages, onSendMessage, isTyping, onOpe
               </div>
             )}
             <div className={`message-bubble ${msg.role}-bubble`}>
-              {msg.content}
+              {msg.uiContent || msg.content}
             </div>
             {msg.role === 'user' && (
               <div className="avatar user-avatar">
@@ -67,16 +70,45 @@ export default function ChatInterface({ messages, onSendMessage, isTyping, onOpe
       </div>
 
       <form className="chat-input-area" onSubmit={handleSubmit}>
-        <input
-          type="text"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder="Describe your requirements..."
-          className="chat-input"
-        />
-        <button type="submit" disabled={!input.trim()} className="send-btn">
-          <Send size={18} />
-        </button>
+        <div className="input-with-file">
+          {attachedFile && (
+            <div className="file-badge fade-in-up">
+              <span className="file-name">{attachedFile.name}</span>
+              <button type="button" onClick={() => setAttachedFile(null)} className="remove-file-btn"><X size={12} /></button>
+            </div>
+          )}
+          <div className="input-row">
+            <button 
+              type="button" 
+              className="attach-btn" 
+              onClick={() => fileInputRef.current?.click()}
+              title="Attach Document (.txt, .pdf, .docx)"
+            >
+              <Paperclip size={18} />
+            </button>
+            <input
+              type="file"
+              ref={fileInputRef}
+              style={{ display: 'none' }}
+              accept=".txt,.pdf,.docx"
+              onChange={(e) => {
+                const file = e.target.files[0];
+                if (file) setAttachedFile(file);
+                e.target.value = null;
+              }}
+            />
+            <input
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="Describe requirements or attach a doc..."
+              className="chat-input"
+            />
+            <button type="submit" disabled={(!input.trim() && !attachedFile) || isTyping} className="send-btn">
+              <Send size={18} />
+            </button>
+          </div>
+        </div>
       </form>
     </div>
   );

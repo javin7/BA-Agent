@@ -19,6 +19,7 @@ CRITICAL: You MUST respond EXCLUSIVELY with a raw, valid JSON object matching th
 
 Rules:
 - Keep the replyContent conversational and encouraging.
+- If the user provides a document or text that is completely irrelevant to a software project, business requirements, or use cases (e.g., a recipe, random article, or junk block), you MUST reject it conversationally in your 'replyContent' informing them no relevant requirements were found. Do NOT hallucinate or force-fabricate requirements. Leave the arrays exactly as they were.
 - If detailScore is >= 90, set clarifyingQuestions to [].
 - Append to the existing requirements/use cases rather than replacing them, unless the user explicitly wants to pivot.`;
 

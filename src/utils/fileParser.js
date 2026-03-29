@@ -1,8 +1,9 @@
 import * as pdfjsLib from 'pdfjs-dist';
+import pdfWorkerUrl from 'pdfjs-dist/build/pdf.worker.mjs?url';
 import mammoth from 'mammoth/mammoth.browser'; // Important for using mammoth in the browser
 
-// Safely map the pdf.js worker to a reliable CDN that matches the exact installed version
-pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
+// Safely map the pdf.js worker locally via Vite asset pipeline to avoid cross-origin and CDN fetch failures
+pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
 
 export async function parseFileText(file) {
   const extension = file.name.split('.').pop().toLowerCase();
