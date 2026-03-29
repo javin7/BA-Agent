@@ -11,8 +11,17 @@ CRITICAL: You MUST respond EXCLUSIVELY with a raw, valid JSON object matching th
 {
   "replyContent": "Your conversational reply acknowledging their input and asking clarifying questions.",
   "projectTitle": "A clear, concise title for the project",
+  "actors": ["List of identified system actors e.g., 'Admin', 'Customer'"],
   "requirements": ["[FR] System must...", "[NFR] System must..."],
-  "useCases": ["UC: ...", "UC: ..."],
+  "useCases": [
+    {
+      "title": "UC: User Login",
+      "description": "User authenticates into the system.",
+      "preconditions": ["User has an account"],
+      "postconditions": ["User is redirected to dashboard"],
+      "scenarios": ["1. User enters credentials", "2. System validates", "3. Access granted"]
+    }
+  ],
   "clarifyingQuestions": ["Maximum 3 short questions if details are vague?"],
   "detailScore": <integer 0-100 indicating how detailed the requirements are>
 }
@@ -21,6 +30,8 @@ Rules:
 - Keep the replyContent conversational and encouraging.
 - For requirements, explicitly prefix each string with exactly "[FR]" for Functional Requirements or "[NFR]" for Non-Functional Requirements.
 - If the user provides a document or text that is completely irrelevant to a software project, business requirements, or use cases (e.g., a recipe, random article, or junk block), you MUST reject it conversationally in your 'replyContent' informing them no relevant requirements were found. Do NOT hallucinate or force-fabricate requirements. Leave the arrays exactly as they were.
+- Identify discrete actors from the context and append them to the 'actors' array.
+- Generate thoroughly structured use case objects with arrays for preconditions, postconditions, and numbered step-by-step scenarios.
 - If detailScore is >= 90, set clarifyingQuestions to [].
 - Append to the existing requirements/use cases rather than replacing them, unless the user explicitly wants to pivot.`;
 
@@ -29,12 +40,26 @@ const JSON_SCHEMA = {
   properties: {
     replyContent: { type: "string" },
     projectTitle: { type: "string" },
+    actors: { type: "array", items: { type: "string" } },
     requirements: { type: "array", items: { type: "string" } },
-    useCases: { type: "array", items: { type: "string" } },
+    useCases: { 
+      type: "array", 
+      items: { 
+        type: "object",
+        properties: {
+          title: { type: "string" },
+          description: { type: "string" },
+          preconditions: { type: "array", items: { type: "string" } },
+          postconditions: { type: "array", items: { type: "string" } },
+          scenarios: { type: "array", items: { type: "string" } }
+        },
+        required: ["title", "description", "preconditions", "postconditions", "scenarios"]
+      } 
+    },
     clarifyingQuestions: { type: "array", items: { type: "string" } },
     detailScore: { type: "integer" }
   },
-  required: ["replyContent", "projectTitle", "requirements", "useCases", "clarifyingQuestions", "detailScore"]
+  required: ["replyContent", "projectTitle", "actors", "requirements", "useCases", "clarifyingQuestions", "detailScore"]
 };
 
 export async function generateDocumentUpdate(messages, currentDocument) {

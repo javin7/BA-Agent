@@ -9,6 +9,7 @@ export function useAgentLogic() {
   const [isTyping, setIsTyping] = useState(false);
   const [document, setDocument] = useState({
     projectTitle: "Untitled Project",
+    actors: [],
     requirements: [],
     useCases: [],
     clarifyingQuestions: [],
@@ -52,6 +53,7 @@ export function useAgentLogic() {
       
       setDocument({
         projectTitle: llmResponse.projectTitle || document.projectTitle,
+        actors: llmResponse.actors || document.actors,
         requirements: llmResponse.requirements || document.requirements,
         useCases: llmResponse.useCases || document.useCases,
         clarifyingQuestions: llmResponse.clarifyingQuestions || [],
