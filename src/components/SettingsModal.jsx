@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
-import { X, Save } from 'lucide-react';
+import { X, Save, Activity, CheckCircle, AlertCircle } from 'lucide-react';
+import { testApiKey } from '../services/llmService';
 import './SettingsModal.css';
 
 export default function SettingsModal({ isOpen, onClose }) {
   const [provider, setProvider] = useState('google');
   const [apiKey, setApiKey] = useState('');
+  const [testStatus, setTestStatus] = useState('idle'); // 'idle' | 'testing' | 'success' | 'error'
 
   useEffect(() => {
     if (isOpen) {
@@ -12,6 +14,7 @@ export default function SettingsModal({ isOpen, onClose }) {
       const savedKey = localStorage.getItem(`ba_agent_key_${savedProvider}`) || '';
       setProvider(savedProvider);
       setApiKey(savedKey);
+      setTestStatus('idle');
     }
   }, [isOpen]);
 
@@ -20,6 +23,19 @@ export default function SettingsModal({ isOpen, onClose }) {
     setProvider(newProvider);
     const savedKey = localStorage.getItem(`ba_agent_key_${newProvider}`) || '';
     setApiKey(savedKey);
+    setTestStatus('idle');
+  };
+
+  const handleApiKeyChange = (e) => {
+    setApiKey(e.target.value);
+    setTestStatus('idle');
+  }
+
+  const handleTest = async () => {
+    if (!apiKey.trim()) return;
+    setTestStatus('testing');
+    const isValid = await testApiKey(provider, apiKey.trim());
+    setTestStatus(isValid ? 'success' : 'error');
   };
 
   const handleSave = () => {
@@ -54,10 +70,33 @@ export default function SettingsModal({ isOpen, onClose }) {
               id="apiKey"
               type="password" 
               value={apiKey} 
-              onChange={(e) => setApiKey(e.target.value)} 
+              onChange={handleApiKeyChange} 
               placeholder={`Enter ${provider} API Key...`}
               className="settings-input"
             />
+            
+            <div className="test-block">
+              <button 
+                onClick={handleTest} 
+                className="test-btn" 
+                disabled={testStatus === 'testing' || !apiKey.trim()}
+              >
+                <Activity size={14} className={testStatus === 'testing' ? 'spin' : ''} /> 
+                {testStatus === 'testing' ? 'Testing...' : 'Test Connection'}
+              </button>
+              
+              {testStatus === 'success' && (
+                <span className="status-text success-text">
+                  <CheckCircle size={14} /> Valid Key
+                </span>
+              )}
+              {testStatus === 'error' && (
+                <span className="status-text error-text">
+                  <AlertCircle size={14} /> Invalid Key
+                </span>
+              )}
+            </div>
+            
             <small className="help-text">Your API keys are stored securely in your browser's local storage.</small>
           </div>
         </div>

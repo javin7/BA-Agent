@@ -175,3 +175,50 @@ export async function generateDocumentUpdate(messages, currentDocument) {
 
   return JSON.parse(jsonString);
 }
+
+export async function testApiKey(provider, apiKey) {
+  try {
+    if (!apiKey) return false;
+    
+    if (provider === 'google') {
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
+      return res.ok;
+    } else if (provider === 'openai') {
+      const res = await fetch('https://api.openai.com/v1/models', {
+        headers: { "Authorization": `Bearer ${apiKey}` }
+      });
+      return res.ok;
+    } else if (provider === 'openrouter') {
+      const res = await fetch('https://openrouter.ai/api/v1/auth/key', {
+        headers: { "Authorization": `Bearer ${apiKey}` }
+      });
+      return res.ok;
+    } else if (provider === 'anthropic') {
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": apiKey,
+          "anthropic-version": "2023-06-01",
+          "anthropic-dangerously-allow-browser": "true"
+        },
+        body: JSON.stringify({ model: "claude-3-haiku-20240307", messages: [{role: "user", content: "test"}], max_tokens: 1 })
+      });
+      return res.ok;
+    } else if (provider === 'github') {
+      const res = await fetch('https://models.inference.ai.azure.com/chat/completions', {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${apiKey}`
+        },
+        body: JSON.stringify({ model: "gpt-4o", messages: [{role: "user", content: "test"}], max_tokens: 1 })
+      });
+      return res.ok;
+    }
+  } catch (error) {
+    console.error("Test API Key Error:", error);
+    return false;
+  }
+  return false;
+}
